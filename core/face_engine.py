@@ -72,7 +72,7 @@ class OpenCVFaceEngine:
     def compare_encodings(self, descriptor1, descriptor2):
         """
         Computes cosine similarity match score between two 128D feature vectors.
-        Returns (is_match, score_percentage).
+        Requires high precision similarity >= 0.70 (70%) for exact match.
         """
         if not descriptor1 or not descriptor2:
             return False, 0.0
@@ -84,7 +84,7 @@ class OpenCVFaceEngine:
 
         similarity = np.dot(v1, v2) / (np.linalg.norm(v1) * np.linalg.norm(v2))
         score_pct = round(float(similarity) * 100, 1)
-        is_match = similarity >= 0.65
+        is_match = similarity >= 0.70
         return is_match, score_pct
 
     def check_anti_spoofing(self, face_roi):

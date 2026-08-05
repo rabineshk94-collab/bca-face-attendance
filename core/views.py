@@ -324,14 +324,13 @@ def api_process_recognition_frame(request):
             for enc_model in all_encodings:
                 stored_descriptor = enc_model.get_encoding()
                 is_match, score = face_engine.compare_encodings(descriptor, stored_descriptor)
-                if score > best_score:
+                if score > best_score and score >= 70.0:
                     best_score = score
-                    if is_match or score >= 50.0:
-                        best_student = enc_model.student
+                    best_student = enc_model.student
 
             now_time = timezone.now().time()
 
-            if best_student and best_score >= 50.0:
+            if best_student and best_score >= 70.0:
                 existing_att = Attendance.objects.filter(student=best_student, date=target_date).first()
 
                 if existing_att:
