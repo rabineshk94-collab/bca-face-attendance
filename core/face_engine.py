@@ -40,7 +40,8 @@ class OpenCVFaceEngine:
 
     def extract_descriptor(self, frame, face_box):
         """
-        Extracts a normalized 128D feature vector representation from a face ROI.
+        Extracts a multi-zone 128D facial feature vector representation from a face ROI.
+        Analyzes 4 spatial facial quadrants (eyes, nose, mouth, jawline) to generate distinct biometric signatures.
         """
         if frame is None or frame.size == 0:
             return None
@@ -55,16 +56,32 @@ class OpenCVFaceEngine:
             resized = cv2.resize(face_roi, (64, 64))
             gray = cv2.cvtColor(resized, cv2.COLOR_BGR2GRAY)
             
-            gx = cv2.Sobel(gray, cv2.CV_32F, 1, 0, ksize=3)
-            gy = cv2.Sobel(gray, cv2.CV_32F, 0, 1, ksize=3)
-            mag, angle = cv2.cartToPolar(gx, gy, angleInDegrees=True)
-            
-            hist, _ = np.histogram(angle, bins=128, range=(0, 360), weights=mag)
-            norm = np.linalg.norm(hist)
-            if norm > 0:
-                hist = hist / norm
+            # Equalize histogram for lighting invariance
+            gray = cv2.equalizeHist(gray)
 
-            return hist.tolist()
+            # Compute 4 spatial quadrant descriptors (32 dimensions each = 128D)
+            q1 = gray[0:32, 0:32]   # Top Left (Left Eye)
+            q2 = gray[0:32, 32:64]  # Top Right (Right Eye)
+            q3 = gray[32:64, 0:32]  # Bottom Left (Left Cheek/Jaw)
+            q4 = gray[32:64, 32:64] # Bottom Right (Right Cheek/Mouth)
+
+            descriptor = []
+            for sub_region in [q1, q2, q3, q4]:
+                gx = cv2.Sobel(sub_region, cv2.CV_32F, 1, 0, ksize=3)
+                gy = cv2.Sobel(sub_region, cv2.CV_32F, 0, 1, ksize=3)
+                mag, angle = cv2.cartToPolar(gx, gy, angleInDegrees=True)
+                
+                sub_hist, _ = np.histogram(angle, bins=32, range=(0, 360), weights=mag)
+                norm = np.linalg.norm(sub_hist)
+                if norm > 0:
+                    sub_hist = sub_hist / norm
+                descriptor.extend(sub_hist.tolist())
+
+            total_norm = np.linalg.norm(descriptor)
+            if total_norm > 0:
+                descriptor = (np.array(descriptor) / total_norm).tolist()
+
+            return descriptor
         except Exception as e:
             print("Descriptor extraction exception:", e)
             return [0.1] * 128

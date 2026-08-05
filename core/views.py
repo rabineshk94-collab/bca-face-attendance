@@ -317,20 +317,49 @@ def api_process_recognition_frame(request):
             descriptor = face_engine.extract_descriptor(frame, (x, y, w, h))
 
             all_encodings = FaceEncoding.objects.select_related('student', 'student__department').all()
-            best_student = None
-            best_score = 0.0
-
-            # Compare camera feature vector against all stored encodings
+            
+            student_scores = {}
             for enc_model in all_encodings:
                 stored_descriptor = enc_model.get_encoding()
                 is_match, score = face_engine.compare_encodings(descriptor, stored_descriptor)
-                if score > best_score and score >= 70.0:
-                    best_score = score
-                    best_student = enc_model.student
+                if score >= 65.0:
+                    st_id = enc_model.student.id
+                    if st_id not in student_scores:
+                        student_scores[st_id] = {'student': enc_model.student, 'scores': []}
+                    student_scores[st_id]['scores'].append(score)
+
+            ranked_students = []
+            for st_id, data in student_scores.items():
+                max_s = max(data['scores'])
+                avg_s = sum(data['scores']) / len(data['scores'])
+                composite = (max_s * 0.6) + (avg_s * 0.4)
+                ranked_students.append((composite, max_s, data['student']))
+
+            ranked_students.sort(key=lambda x: x[0], reverse=True)
+
+            best_student = None
+            best_score = 0.0
+
+            if len(ranked_students) > 0:
+                top_composite, top_max, top_student = ranked_students[0]
+
+                if len(ranked_students) > 1:
+                    second_composite, second_max, second_student = ranked_students[1]
+                    margin = top_composite - second_composite
+                    if margin >= 3.5 and top_composite >= 68.0:
+                        best_student = top_student
+                        best_score = top_composite
+                    else:
+                        best_student = None
+                        best_score = 0.0
+                else:
+                    if top_composite >= 68.0:
+                        best_student = top_student
+                        best_score = top_composite
 
             now_time = timezone.now().time()
 
-            if best_student and best_score >= 70.0:
+            if best_student and best_score >= 68.0:
                 existing_att = Attendance.objects.filter(student=best_student, date=target_date).first()
 
                 if existing_att:
