@@ -123,16 +123,20 @@
       btnToggle.innerHTML = isScanning ? '<i class="ri-pause-line me-1"></i> {{ tr.btn_pause }}' : '<i class="ri-play-line me-1"></i> {{ tr.btn_resume }}';
     });
 
+    let isProcessingFrame = false;
+
     function startProcessingLoop() {
       scanTimer = setInterval(() => {
-        if (!isScanning || !video.videoWidth) return;
+        if (!isScanning || !video.videoWidth || isProcessingFrame) return;
+
+        isProcessingFrame = true;
 
         const canvas = document.createElement('canvas');
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
+        canvas.width = 480;
+        canvas.height = 360;
         const cCtx = canvas.getContext('2d');
         cCtx.drawImage(video, 0, 0, canvas.width, canvas.height);
-        const frameData = canvas.toDataURL('image/jpeg', 0.7);
+        const frameData = canvas.toDataURL('image/jpeg', 0.45);
 
         fetch("{% url 'api_process_frame' %}", {
           method: 'POST',
@@ -147,6 +151,7 @@
         })
         .then(res => res.json())
         .then(data => {
+          isProcessingFrame = false;
           ctx.clearRect(0, 0, overlay.width, overlay.height);
           spoofBanner.classList.add('d-none');
 

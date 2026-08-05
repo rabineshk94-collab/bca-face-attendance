@@ -322,7 +322,7 @@ def api_process_recognition_frame(request):
             for enc_model in all_encodings:
                 stored_descriptor = enc_model.get_encoding()
                 is_match, score = face_engine.compare_encodings(descriptor, stored_descriptor)
-                if score >= 65.0:
+                if score >= 55.0:
                     st_id = enc_model.student.id
                     if st_id not in student_scores:
                         student_scores[st_id] = {'student': enc_model.student, 'scores': []}
@@ -346,20 +346,20 @@ def api_process_recognition_frame(request):
                 if len(ranked_students) > 1:
                     second_composite, second_max, second_student = ranked_students[1]
                     margin = top_composite - second_composite
-                    if margin >= 3.5 and top_composite >= 68.0:
+                    if margin >= 2.0 and top_composite >= 58.0:
                         best_student = top_student
                         best_score = top_composite
                     else:
-                        best_student = None
-                        best_score = 0.0
+                        best_student = top_student if top_composite >= 62.0 else None
+                        best_score = top_composite if top_composite >= 62.0 else 0.0
                 else:
-                    if top_composite >= 68.0:
+                    if top_composite >= 58.0:
                         best_student = top_student
                         best_score = top_composite
 
             now_time = timezone.now().time()
 
-            if best_student and best_score >= 68.0:
+            if best_student and best_score >= 58.0:
                 existing_att = Attendance.objects.filter(student=best_student, date=target_date).first()
 
                 if existing_att:

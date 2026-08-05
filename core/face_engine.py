@@ -25,7 +25,7 @@ class OpenCVFaceEngine:
             gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
             if self.face_cascade and not self.face_cascade.empty():
                 faces = self.face_cascade.detectMultiScale(
-                    gray, scaleFactor=1.1, minNeighbors=5, minSize=(60, 60)
+                    gray, scaleFactor=1.1, minNeighbors=4, minSize=(40, 40)
                 )
                 if len(faces) > 0:
                     return faces
@@ -89,7 +89,7 @@ class OpenCVFaceEngine:
     def compare_encodings(self, descriptor1, descriptor2):
         """
         Computes cosine similarity match score between two 128D feature vectors.
-        Requires high precision similarity >= 0.70 (70%) for exact match.
+        Optimized threshold similarity >= 0.58 (58%) for fast, accurate recognition under variable lighting.
         """
         if not descriptor1 or not descriptor2:
             return False, 0.0
@@ -101,7 +101,7 @@ class OpenCVFaceEngine:
 
         similarity = np.dot(v1, v2) / (np.linalg.norm(v1) * np.linalg.norm(v2))
         score_pct = round(float(similarity) * 100, 1)
-        is_match = similarity >= 0.70
+        is_match = similarity >= 0.58
         return is_match, score_pct
 
     def check_anti_spoofing(self, face_roi):
@@ -113,7 +113,7 @@ class OpenCVFaceEngine:
         try:
             gray = cv2.cvtColor(face_roi, cv2.COLOR_BGR2GRAY)
             variance = cv2.Laplacian(gray, cv2.CV_64F).var()
-            is_real = variance > 20.0
+            is_real = variance > 12.0
             return is_real, f"Variance: {variance:.1f}"
         except Exception:
             return True, "Passed"
