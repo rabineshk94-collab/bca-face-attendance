@@ -52,17 +52,17 @@
 
     /* Modern Header Navbar */
     .navbar {
-      background: rgba(6, 9, 17, 0.95) !important;
+      background: rgba(6, 9, 17, 0.98) !important;
       backdrop-filter: blur(16px);
       -webkit-backdrop-filter: blur(16px);
-      border-bottom: 1px solid rgba(0, 242, 254, 0.25);
-      box-shadow: 0 4px 25px rgba(0, 0, 0, 0.8);
-      padding: 0.6rem 1rem;
+      border-bottom: 1px solid rgba(0, 242, 254, 0.3);
+      box-shadow: 0 4px 25px rgba(0, 0, 0, 0.85);
+      padding: 0.75rem 1.25rem;
     }
 
     .navbar-brand {
       font-weight: 700;
-      font-size: 1.2rem;
+      font-size: 1.25rem;
       background: linear-gradient(135deg, var(--accent-cyan), var(--accent-blue), var(--accent-purple));
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
@@ -70,27 +70,27 @@
       letter-spacing: -0.2px;
     }
 
-    /* 3-Line Hamburger Button (Visible on Laptops, Desktops, & Phones) */
+    /* 3-Line Hamburger Button (ALWAYS VISIBLE ON LAPTOPS & PHONES) */
     .btn-hamburger-3lines {
-      background: rgba(0, 242, 254, 0.12) !important;
-      border: 1px solid rgba(0, 242, 254, 0.45) !important;
+      background: rgba(0, 242, 254, 0.15) !important;
+      border: 1px solid var(--accent-cyan) !important;
       color: var(--accent-cyan) !important;
       font-weight: 700 !important;
-      padding: 0.4rem 0.9rem !important;
+      padding: 0.45rem 1rem !important;
       border-radius: 10px !important;
       transition: all 0.25s ease !important;
       display: inline-flex !important;
       align-items: center !important;
-      gap: 0.4rem !important;
-      box-shadow: 0 0 14px rgba(0, 242, 254, 0.2) !important;
+      gap: 0.5rem !important;
+      box-shadow: 0 0 16px rgba(0, 242, 254, 0.3) !important;
       cursor: pointer !important;
     }
 
     .btn-hamburger-3lines:hover, .btn-hamburger-3lines:focus {
-      background: rgba(0, 242, 254, 0.25) !important;
+      background: rgba(0, 242, 254, 0.3) !important;
       border-color: var(--accent-cyan) !important;
       color: #ffffff !important;
-      box-shadow: 0 0 20px rgba(0, 242, 254, 0.4) !important;
+      box-shadow: 0 0 24px rgba(0, 242, 254, 0.5) !important;
       transform: translateY(-1px);
     }
 
@@ -129,7 +129,7 @@
       -webkit-backdrop-filter: blur(20px);
       border-left: 1px solid rgba(0, 242, 254, 0.3) !important;
       box-shadow: -10px 0 40px rgba(0, 0, 0, 0.9);
-      width: 320px !important;
+      width: 330px !important;
     }
 
     .vertical-menu-list {
@@ -138,37 +138,37 @@
       margin: 0;
       display: flex;
       flex-direction: column;
-      gap: 0.45rem;
+      gap: 0.5rem;
     }
 
     .vertical-menu-item .v-link {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 0.75rem 1rem;
+      padding: 0.8rem 1.1rem;
       color: #cbd5e1;
       text-decoration: none;
       font-weight: 600;
       font-size: 0.95rem;
-      border-radius: 10px;
-      background: rgba(15, 23, 42, 0.7);
+      border-radius: 12px;
+      background: rgba(15, 23, 42, 0.85);
       border: 1px solid rgba(255, 255, 255, 0.1);
       transition: all 0.2s ease;
     }
 
     .vertical-menu-item .v-link:hover {
-      background: rgba(0, 242, 254, 0.18);
-      border-color: rgba(0, 242, 254, 0.5);
+      background: rgba(0, 242, 254, 0.2);
+      border-color: rgba(0, 242, 254, 0.6);
       color: #ffffff;
-      padding-left: 1.25rem;
+      padding-left: 1.35rem;
     }
 
     .vertical-menu-item .v-link.active {
-      background: linear-gradient(135deg, rgba(0, 242, 254, 0.25), rgba(97, 87, 255, 0.25));
+      background: linear-gradient(135deg, rgba(0, 242, 254, 0.3), rgba(97, 87, 255, 0.3));
       border: 1px solid var(--accent-cyan);
       color: var(--accent-cyan);
       font-weight: 700;
-      box-shadow: 0 0 15px rgba(0, 242, 254, 0.25);
+      box-shadow: 0 0 18px rgba(0, 242, 254, 0.3);
     }
 
     .form-label {
@@ -305,7 +305,7 @@
         <!-- 3-LINE HAMBURGER MENU BUTTON (ALWAYS VISIBLE ON LAPTOPS & PHONES) -->
         <button class="btn btn-hamburger-3lines" type="button" data-bs-toggle="offcanvas" data-bs-target="#hamburgerDrawer" aria-controls="hamburgerDrawer">
           <i class="ri-menu-line fs-4"></i>
-          <span>{{ tr.nav_menu }}</span>
+          <span>{{ tr.nav_menu }} ☰</span>
         </button>
       </div>
 
@@ -316,7 +316,7 @@
   <div class="offcanvas offcanvas-end offcanvas-dark-custom text-light" tabindex="-1" id="hamburgerDrawer" aria-labelledby="hamburgerDrawerLabel">
     <div class="offcanvas-header border-bottom border-secondary border-opacity-25 pb-3">
       <h5 class="offcanvas-title fw-bold text-cyan" id="hamburgerDrawerLabel">
-        <i class="ri-menu-line me-2"></i>{{ tr.nav_menu }}
+        <i class="ri-menu-line me-2"></i>{{ tr.nav_menu }} ☰
       </h5>
       <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Close"></button>
     </div>
