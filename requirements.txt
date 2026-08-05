@@ -1,0 +1,9 @@
+Django>=5.0
+opencv-python-headless
+numpy
+pillow
+openpyxl
+qrcode
+reportlab
+whitenoise
+gunicorn

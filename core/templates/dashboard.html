@@ -1,0 +1,123 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ tr.dash_title }} - Face Recognition Attendance System{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <div>
+    <h2 class="fw-bold mb-1"><i class="ri-dashboard-3-line text-cyan me-2"></i>{{ tr.dash_title }}</h2>
+    <p class="text-light small mb-0"><i class="ri-calendar-line text-info"></i> {{ tr.dash_subtitle }} • Date: <strong>{{ today_date }}</strong></p>
+  </div>
+
+  <div class="d-flex gap-2">
+    <a href="{% url 'live_attendance' %}" class="btn btn-gradient btn-sm fw-bold"><i class="ri-camera-line me-1"></i> {{ tr.btn_start_scanner }}</a>
+    <a href="{% url 'student_add' %}" class="btn btn-outline-light btn-sm fw-bold"><i class="ri-user-add-line me-1"></i> {{ tr.st_add_btn }}</a>
+  </div>
+</div>
+
+<!-- KPI Cards Grid -->
+<div class="row g-3 mb-4">
+  <div class="col-md-3">
+    <div class="glass-card p-3 d-flex align-items-center gap-3">
+      <div class="p-3 rounded-3 bg-info bg-opacity-10 text-cyan fs-3"><i class="ri-user-smile-line"></i></div>
+      <div>
+        <small class="text-light d-block fw-bold">{{ tr.dash_total_students }}</small>
+        <h3 class="fw-bold mb-0 text-cyan">{{ total_students }}</h3>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-3">
+    <div class="glass-card p-3 d-flex align-items-center gap-3">
+      <div class="p-3 rounded-3 bg-success bg-opacity-10 text-success fs-3"><i class="ri-checkbox-circle-line"></i></div>
+      <div>
+        <small class="text-light d-block fw-bold">{{ tr.dash_today_present }}</small>
+        <h3 class="fw-bold mb-0 text-success">{{ today_present }}</h3>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-3">
+    <div class="glass-card p-3 d-flex align-items-center gap-3">
+      <div class="p-3 rounded-3 bg-danger bg-opacity-10 text-danger fs-3"><i class="ri-close-circle-line"></i></div>
+      <div>
+        <small class="text-light d-block fw-bold">{{ tr.dash_today_absent }}</small>
+        <h3 class="fw-bold mb-0 text-danger">{{ today_absent }}</h3>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-3">
+    <div class="glass-card p-3 d-flex align-items-center gap-3">
+      <div class="p-3 rounded-3 bg-warning bg-opacity-10 text-warning fs-3"><i class="ri-building-4-line"></i></div>
+      <div>
+        <small class="text-light d-block fw-bold">{{ tr.dash_departments }}</small>
+        <h3 class="fw-bold mb-0 text-warning">{{ total_departments }}</h3>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-4">
+  <!-- Recent Check-Ins -->
+  <div class="col-lg-7">
+    <div class="glass-card p-4">
+      <h5 class="fw-bold mb-3 text-light"><i class="ri-history-line text-cyan me-2"></i>{{ tr.dash_recent_activity }}</h5>
+
+      <div class="table-responsive">
+        <table class="table table-dark-custom align-middle mb-0">
+          <thead>
+            <tr class="bg-dark text-light">
+              <th>Student</th>
+              <th>Roll Number</th>
+              <th>Time In</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% if recent_logs %}
+              {% for log in recent_logs %}
+                <tr>
+                  <td><strong class="text-light">{{ log.student.name }}</strong></td>
+                  <td><span class="font-monospace text-info fw-bold">{{ log.student.roll_number }}</span></td>
+                  <td><span class="font-monospace text-light fw-bold">{{ log.time_in|time:"H:i:s" }}</span></td>
+                  <td>
+                    <span class="badge {% if log.status == 'Present' %}bg-success{% elif log.status == 'Late' %}bg-warning text-dark{% else %}bg-danger{% endif %} bg-opacity-25 {% if log.status == 'Present' %}text-success{% elif log.status == 'Late' %}text-warning{% else %}text-danger{% endif %} px-3 py-1 fw-bold">
+                      {{ log.status }}
+                    </span>
+                  </td>
+                </tr>
+              {% endfor %}
+            {% else %}
+              <tr>
+                <td colspan="4" class="text-center py-4 text-light">No live attendance logs recorded for today yet.</td>
+              </tr>
+            {% endif %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Department Performance -->
+  <div class="col-lg-5">
+    <div class="glass-card p-4">
+      <h5 class="fw-bold mb-3 text-light"><i class="ri-pie-chart-2-line text-warning me-2"></i>{{ tr.dash_dept_performance }}</h5>
+
+      <div class="list-group list-group-flush bg-transparent">
+        {% for d in dept_stats %}
+          <div class="list-group-item bg-transparent text-light border-secondary border-opacity-25 px-0 py-3">
+            <div class="d-flex justify-content-between align-items-center mb-1">
+              <strong class="text-light">{{ d.name }} ({{ d.code }})</strong>
+              <span class="font-monospace text-cyan fw-bold">{{ d.rate }}%</span>
+            </div>
+            <div class="progress bg-dark" style="height: 8px;">
+              <div class="progress-bar bg-gradient" role="progressbar" style="width: {{ d.rate }}%"></div>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

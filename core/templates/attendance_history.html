@@ -1,0 +1,128 @@
+{% extends 'base.html' %}
+
+{% block title %}Attendance Audit Logs - Face Recognition Attendance System{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <div>
+    <h2 class="fw-bold mb-1"><i class="ri-history-line text-cyan me-2"></i>Attendance Audit History Logs</h2>
+    <p class="text-light small mb-0">Search, filter, inspect, and export time-stamped attendance records</p>
+  </div>
+
+  <div class="d-flex gap-2">
+    <a id="btn-auto-absent" href="{% url 'api_auto_mark_absent' %}" class="btn btn-outline-warning btn-sm fw-bold" onclick="return confirm('Auto-mark all un-scanned students as ABSENT for selected date?')">
+      <i class="ri-user-unfollow-line me-1"></i> Auto-Mark Absent
+    </a>
+    <a href="{% url 'export_excel' %}" class="btn btn-outline-success btn-sm fw-bold"><i class="ri-file-excel-2-line me-1"></i> Export Excel (CSV)</a>
+    <a href="{% url 'export_pdf' %}" target="_blank" class="btn btn-outline-danger btn-sm fw-bold"><i class="ri-file-pdf-line me-1"></i> Print PDF Report</a>
+  </div>
+</div>
+
+<!-- Filter Toolbar -->
+<div class="glass-card p-3 mb-4">
+  <form method="GET" action="{% url 'attendance_history' %}" class="row g-3">
+    <div class="col-md-3">
+      <label class="form-label text-light fw-bold mb-1">Select Date</label>
+      <input type="date" id="history-date-picker" name="date" value="{{ selected_date }}" class="form-control bg-dark text-cyan border-secondary fw-bold" />
+    </div>
+
+    <div class="col-md-3">
+      <label class="form-label text-light fw-bold mb-1">Filter Department</label>
+      <select name="dept" class="form-select bg-dark text-light border-secondary">
+        <option value="ALL">All Departments</option>
+        {% for d in departments %}
+          <option value="{{ d.id }}" {% if selected_dept == d.id|stringformat:"i" %}selected{% endif %}>{{ d.name }} ({{ d.code }})</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div class="col-md-3">
+      <label class="form-label text-light fw-bold mb-1">Search Student / Roll Number</label>
+      <input type="text" name="q" value="{{ query }}" class="form-control bg-dark text-light border-secondary" placeholder="e.g. Rabinesh or 2026..." />
+    </div>
+
+    <div class="col-md-3 d-flex align-items-end gap-2">
+      <button type="submit" class="btn btn-gradient flex-grow-1 py-2"><i class="ri-search-line me-1"></i> Filter Logs</button>
+      <a href="{% url 'attendance_history' %}" class="btn btn-outline-secondary py-2" title="Show All Dates & Clear Filters"><i class="ri-refresh-line"></i> Clear</a>
+    </div>
+  </form>
+</div>
+
+<!-- History Table -->
+<div class="glass-card p-0 overflow-hidden">
+  <div class="p-3 border-bottom border-secondary border-opacity-25 bg-dark d-flex justify-content-between align-items-center">
+    <h5 class="fw-bold mb-0 text-light"><i class="ri-table-line text-warning me-2"></i>Logs Roster {% if is_filtered_date %}(Filtered for Date: <span class="text-cyan">{{ selected_date }}</span>){% else %}(Showing All Dates){% endif %}</h5>
+    <span class="badge bg-info bg-opacity-25 text-cyan font-monospace">{{ attendances|length }} Total Records</span>
+  </div>
+
+  <div class="table-responsive">
+    <table class="table table-dark-custom align-middle mb-0">
+      <thead>
+        <tr class="bg-dark text-light">
+          <th class="ps-4">Student Name</th>
+          <th>Roll Number</th>
+          <th>Department & Year</th>
+          <th>Date</th>
+          <th>Time In</th>
+          <th>Status</th>
+          <th>Confidence Score</th>
+          <th class="pe-4">Method</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% if attendances %}
+          {% for a in attendances %}
+            <tr>
+              <td class="ps-4"><strong class="text-light fs-6">{{ a.student.name }}</strong></td>
+              <td><span class="font-monospace text-info fw-bold">{{ a.student.roll_number }}</span></td>
+              <td><span class="text-light">{{ a.department.code }}</span> <small class="text-muted">({{ a.student.year }})</small></td>
+              <td><span class="badge bg-secondary font-monospace px-2 py-1 fw-bold text-light">{{ a.date }}</span></td>
+              <td><span class="font-monospace text-light fw-bold">{{ a.time_in|time:"H:i:s" }}</span></td>
+              <td>
+                <span class="badge {% if a.status == 'Present' or a.status == 'Present (On Leave)' %}bg-success{% elif a.status == 'Late' %}bg-warning text-dark{% else %}bg-danger{% endif %} bg-opacity-25 {% if a.status == 'Present' or a.status == 'Present (On Leave)' %}text-success{% elif a.status == 'Late' %}text-warning{% else %}text-danger{% endif %} px-3 py-1 fw-bold">
+                  {{ a.status }}
+                </span>
+              </td>
+              <td><span class="font-monospace text-cyan fw-bold">{{ a.confidence_score }}%</span></td>
+              <td class="pe-4"><small class="badge bg-secondary">{{ a.method }}</small></td>
+            </tr>
+          {% endfor %}
+        {% else %}
+          <tr>
+            <td colspan="8" class="text-center py-5 text-light">
+              <i class="ri-inbox-line fs-2 text-muted mb-2 d-block"></i>
+              No attendance logs found matching selected criteria. Click <strong><a href="{% url 'attendance_history' %}" class="text-cyan">Clear Filters</a></strong> to view all dates.
+            </td>
+          </tr>
+        {% endif %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const datePicker = document.getElementById('history-date-picker');
+    const autoAbsentBtn = document.getElementById('btn-auto-absent');
+
+    // Auto-fill laptop's current local date if user hasn't explicitly filtered by another date
+    const urlParams = new URLSearchParams(window.location.search);
+    if (!urlParams.has('date') && datePicker) {
+      const todayLaptop = new Date().toLocaleDateString('sv');
+      datePicker.value = todayLaptop;
+    }
+
+    function updateAutoAbsentUrl() {
+      if (autoAbsentBtn && datePicker) {
+        autoAbsentBtn.href = "{% url 'api_auto_mark_absent' %}?date=" + datePicker.value;
+      }
+    }
+    updateAutoAbsentUrl();
+    if (datePicker) {
+      datePicker.addEventListener('change', updateAutoAbsentUrl);
+    }
+  });
+</script>
+{% endblock %}

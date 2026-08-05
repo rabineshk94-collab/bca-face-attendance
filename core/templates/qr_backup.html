@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+
+{% block title %}QR Code Backup Attendance - BCA Project{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <div>
+    <h2 class="fw-bold mb-1"><i class="ri-qr-code-line text-purple"></i> QR Code Backup Attendance System</h2>
+    <p class="text-secondary small mb-0">Fallback attendance logging method in case of hardware webcam or face recognition failure</p>
+  </div>
+</div>
+
+<div class="row g-4">
+  <!-- QR Check-In Scanner Form -->
+  <div class="col-md-6">
+    <div class="glass-card p-4 h-100">
+      <h4 class="fw-bold mb-3"><i class="ri-scan-line text-info"></i> Mark Attendance via Student QR / Roll Code</h4>
+      <p class="text-secondary small">Enter or scan the student Roll Number below to instantly log daily attendance.</p>
+
+      <form method="POST" action="{% url 'api_qr_attendance' %}">
+        {% csrf_token %}
+        <div class="mb-3">
+          <label class="form-label text-muted small">Student Roll Number *</label>
+          <div class="input-group">
+            <span class="input-group-text bg-dark border-secondary text-secondary"><i class="ri-qr-code-line"></i></span>
+            <input type="text" name="roll_number" class="form-control bg-dark text-light border-secondary" required placeholder="e.g. 2026-BCA-042" autofocus />
+          </div>
+        </div>
+
+        <button type="submit" class="btn btn-gradient w-100 py-2"><i class="ri-check-double-line"></i> Log Attendance via QR Backup</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Student QR Roster Card List -->
+  <div class="col-md-6">
+    <div class="glass-card p-4 h-100">
+      <h4 class="fw-bold mb-3"><i class="ri-id-card-line text-warning"></i> Quick Roll Code Reference</h4>
+
+      <div class="list-group list-group-flush bg-transparent overflow-auto" style="max-height: 300px;">
+        {% for s in students %}
+          <div class="list-group-item bg-transparent text-light border-secondary border-opacity-25 px-0 py-2 d-flex justify-content-between align-items-center">
+            <div>
+              <strong>{{ s.name }}</strong>
+              <small class="d-block text-muted">{{ s.department.code }} ({{ s.year }})</small>
+            </div>
+            <span class="font-monospace text-info small">{{ s.roll_number }}</span>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

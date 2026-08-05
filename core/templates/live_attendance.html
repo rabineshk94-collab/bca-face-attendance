@@ -1,0 +1,222 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ tr.nav_scanner }} - BCA Project{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <div>
+    <h2 class="fw-bold mb-1"><i class="ri-camera-lens-line text-cyan me-2"></i>{{ tr.scanner_title }}</h2>
+    <p class="text-light small mb-0">{{ tr.scanner_subtitle }}</p>
+  </div>
+
+  <div class="d-flex gap-2">
+    <!-- Active Scanning Date Picker (Defaults to Laptop Local Date) -->
+    <div class="input-group input-group-sm" style="max-width: 220px;">
+      <span class="input-group-text bg-dark border-info text-cyan"><i class="ri-calendar-line"></i></span>
+      <input type="date" id="date-select" class="form-control bg-dark text-cyan border-info fw-bold" />
+    </div>
+
+    <a id="btn-reset-date" href="{% url 'api_reset_today_attendance' %}" class="btn btn-outline-warning btn-sm fw-bold" onclick="return confirm('Clear attendance logs for selected date?')">
+      <i class="ri-refresh-line me-1"></i> {{ tr.btn_reset_logs }}
+    </a>
+
+    <button id="btn-toggle-scan" class="btn btn-gradient btn-sm px-3 fw-bold"><i class="ri-pause-line me-1"></i> {{ tr.btn_pause }}</button>
+  </div>
+</div>
+
+<div class="row g-4">
+  <!-- Live Scanner Feed Box -->
+  <div class="col-lg-8">
+    <div class="glass-card p-3 overflow-hidden position-relative">
+      <div class="d-flex justify-content-between align-items-center mb-2 px-2">
+        <span class="badge bg-danger bg-opacity-25 text-danger border border-danger border-opacity-25 d-flex align-items-center gap-1">
+          <span class="spinner-grow spinner-grow-sm text-danger" style="width:0.5rem; height:0.5rem;"></span> LIVE OPENCV CAMERA STREAM
+        </span>
+        <small class="font-monospace text-light" id="fps-display">Processing @ ~15 FPS</small>
+      </div>
+
+      <div class="ratio ratio-16x9 bg-black rounded-3 overflow-hidden border border-secondary border-opacity-50 position-relative">
+        <video id="webcam" autoplay playsinline muted style="object-fit: cover; transform: scaleX(-1);"></video>
+        <canvas id="canvas-overlay" style="position: absolute; inset:0; pointer-events: none; width:100%; height:100%;"></canvas>
+
+        <div id="spoof-alert-banner" class="position-absolute top-0 start-0 end-0 bg-danger text-white py-2 text-center fw-bold d-none" style="z-index: 10;">
+          <i class="ri-error-warning-line fs-5 me-1"></i> ANTI-SPOOF WARNING: PHOTO / DISPLAY SCREEN DETECTED
+        </div>
+      </div>
+
+      <div class="d-flex justify-content-between align-items-center mt-3 px-2 small text-light">
+        <span>Engine Mode: <strong class="text-cyan">OpenCV Multi-Landmark + 128D Vector Matching</strong></span>
+        <span>Laptop Date Sync: <strong class="text-success">ACTIVE</strong></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Live Recognition Status Sidebar -->
+  <div class="col-lg-4">
+    <div class="glass-card p-4 h-100 d-flex flex-column justify-content-between">
+      <div>
+        <h5 class="fw-bold mb-3 text-light"><i class="ri-user-check-line text-success me-2"></i>{{ tr.target_result }}</h5>
+
+        <div id="target-result-card" class="glass-card p-3 mb-3 text-center border-secondary">
+          <i class="ri-scan-2-line text-muted fs-1 mb-2 d-block"></i>
+          <p class="text-light small mb-0">Align face inside the camera view...</p>
+        </div>
+
+        <div class="border-top border-secondary border-opacity-25 pt-3">
+          <h6 class="fw-bold mb-2 small text-light">Real-Time Check-In Feed</h6>
+          <div id="checkin-feed" class="list-group list-group-flush bg-transparent small">
+            <!-- Rendered via JS -->
+          </div>
+        </div>
+      </div>
+
+      <div class="mt-3">
+        <a href="{% url 'attendance_history' %}" class="btn btn-outline-info w-100 py-2 btn-sm fw-bold"><i class="ri-file-list-line me-1"></i> View Attendance History</a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const video = document.getElementById('webcam');
+    const overlay = document.getElementById('canvas-overlay');
+    const ctx = overlay.getContext('2d');
+    const targetCard = document.getElementById('target-result-card');
+    const checkinFeed = document.getElementById('checkin-feed');
+    const spoofBanner = document.getElementById('spoof-alert-banner');
+    const btnToggle = document.getElementById('btn-toggle-scan');
+    const dateSelect = document.getElementById('date-select');
+    const btnReset = document.getElementById('btn-reset-date');
+
+    const todayLocal = new Date().toLocaleDateString('sv');
+    dateSelect.value = todayLocal;
+
+    function updateResetUrl() {
+      btnReset.href = "{% url 'api_reset_today_attendance' %}?date=" + dateSelect.value;
+    }
+    updateResetUrl();
+    dateSelect.addEventListener('change', updateResetUrl);
+
+    let isScanning = true;
+    let scanTimer = null;
+    let recentLogs = [];
+
+    // Start Webcam Stream
+    navigator.mediaDevices.getUserMedia({ video: { width: 1280, height: 720 }, audio: false })
+      .then(stream => {
+        video.srcObject = stream;
+        video.onloadedmetadata = () => {
+          overlay.width = video.videoWidth;
+          overlay.height = video.videoHeight;
+          startProcessingLoop();
+        };
+      })
+      .catch(err => {
+        targetCard.innerHTML = `<div class="text-danger small p-2"><i class="ri-camera-off-line fs-2 d-block mb-1"></i>Camera error: Please enable browser webcam permissions.</div>`;
+      });
+
+    btnToggle.addEventListener('click', () => {
+      isScanning = !isScanning;
+      btnToggle.innerHTML = isScanning ? '<i class="ri-pause-line me-1"></i> {{ tr.btn_pause }}' : '<i class="ri-play-line me-1"></i> {{ tr.btn_resume }}';
+    });
+
+    function startProcessingLoop() {
+      scanTimer = setInterval(() => {
+        if (!isScanning || !video.videoWidth) return;
+
+        const canvas = document.createElement('canvas');
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        const cCtx = canvas.getContext('2d');
+        cCtx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        const frameData = canvas.toDataURL('image/jpeg', 0.7);
+
+        fetch("{% url 'api_process_frame' %}", {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': '{{ csrf_token }}'
+          },
+          body: JSON.stringify({
+            image_data: frameData,
+            target_date: dateSelect.value || new Date().toLocaleDateString('sv')
+          })
+        })
+        .then(res => res.json())
+        .then(data => {
+          ctx.clearRect(0, 0, overlay.width, overlay.height);
+          spoofBanner.classList.add('d-none');
+
+          if (!data.success) return;
+
+          if (data.spoof_alert) {
+            spoofBanner.classList.remove('d-none');
+            drawBoundingBox(data.box, 'SPOOF DETECTED', '#ef4444');
+            return;
+          }
+
+          if (data.detected) {
+            if (data.recognized) {
+              drawBoundingBox(data.box, `${data.student_name} (${data.confidence})`, '#10b981');
+              updateTargetCard(data);
+
+              addRecentLog(data);
+            } else {
+              drawBoundingBox(data.box, 'UNREGISTERED PERSON', '#f59e0b');
+              updateUnknownCard();
+            }
+          }
+        })
+        .catch(e => console.error("Process error:", e));
+      }, 700);
+    }
+
+    function drawBoundingBox(box, label, color) {
+      if (!box) return;
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 3;
+      ctx.strokeRect(box.x, box.y, box.w, box.h);
+
+      ctx.fillStyle = color;
+      ctx.fillRect(box.x, box.y - 24, ctx.measureText(label).width + 16, 24);
+      ctx.fillStyle = '#ffffff';
+      ctx.font = '12px Outfit, sans-serif';
+      ctx.fillText(label, box.x + 8, box.y - 8);
+    }
+
+    function updateTargetCard(data) {
+      targetCard.innerHTML = `
+        <div class="text-success mb-1 fs-4"><i class="ri-checkbox-circle-fill"></i></div>
+        <h4 class="fw-bold text-light mb-1">${data.student_name}</h4>
+        <p class="font-monospace text-info small mb-1">Roll No: ${data.roll_number}</p>
+        <p class="text-light small mb-2">${data.department} • Match: <strong>${data.confidence}</strong></p>
+        <span class="badge bg-success bg-opacity-25 text-success px-3 py-1 fw-bold">${data.status}</span>
+      `;
+    }
+
+    function updateUnknownCard() {
+      targetCard.innerHTML = `
+        <div class="text-warning mb-1 fs-4"><i class="ri-alert-line"></i></div>
+        <h4 class="fw-bold text-warning mb-1">Unregistered Person</h4>
+        <p class="text-light small mb-0">Face not registered in database.</p>
+      `;
+    }
+
+    function addRecentLog(data) {
+      const nowTime = new Date().toLocaleTimeString();
+      recentLogs.unshift({ name: data.student_name, roll: data.roll_number, time: nowTime, date: data.date });
+      if (recentLogs.length > 5) recentLogs.pop();
+
+      checkinFeed.innerHTML = recentLogs.map(l => `
+        <div class="list-group-item bg-transparent text-light border-secondary border-opacity-25 px-0 py-2 d-flex justify-content-between">
+          <div><strong class="text-light">${l.name}</strong> <small class="text-info">(${l.roll})</small></div>
+          <span class="text-success font-monospace">${l.date} ${l.time}</span>
+        </div>
+      `).join('');
+    }
+  });
+</script>
+{% endblock %}

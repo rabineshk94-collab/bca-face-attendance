@@ -1,0 +1,166 @@
+{% extends 'base.html' %}
+
+{% block title %}Leave Request & Attendance Correction - BCA Project{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <div>
+    <h2 class="fw-bold mb-1"><i class="ri-calendar-event-line text-warning"></i> Leave Request Management & Attendance Corrections</h2>
+    <p class="text-light small mb-0">Apply for leaves, track approval status, and manage student attendance corrections</p>
+  </div>
+</div>
+
+<div class="row g-4 mb-4">
+  <!-- Leave Submission Form -->
+  <div class="col-lg-6">
+    <div class="glass-card p-4">
+      <h4 class="fw-bold mb-3 text-light"><i class="ri-file-add-line text-info me-2"></i>Apply for Leave</h4>
+
+      <form method="POST" action="{% url 'leave_list' %}">
+        {% csrf_token %}
+
+        {% if role != 'STUDENT' %}
+          <div class="mb-3">
+            <label class="form-label text-light fw-bold">Select Student *</label>
+            <select name="student_id" class="form-select bg-dark text-light border-secondary" required>
+              <option value="">-- Choose Student from Roster --</option>
+              {% for s in students %}
+                <option value="{{ s.id }}">{{ s.name }} ({{ s.roll_number }} • {{ s.department.code }})</option>
+              {% endfor %}
+            </select>
+          </div>
+        {% endif %}
+
+        <div class="row g-3 mb-3">
+          <div class="col-6">
+            <label class="form-label text-light fw-bold">Start Date *</label>
+            <input type="date" name="start_date" id="leave-start-date" class="form-control bg-dark text-light border-secondary" required />
+          </div>
+
+          <div class="col-6">
+            <label class="form-label text-light fw-bold">End Date *</label>
+            <input type="date" name="end_date" id="leave-end-date" class="form-control bg-dark text-light border-secondary" required />
+          </div>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label text-light fw-bold">Reason for Leave *</label>
+          <textarea name="reason" rows="2" class="form-control bg-dark text-light border-secondary" required placeholder="State reason (e.g. Medical, Family event...)"></textarea>
+        </div>
+
+        <button type="submit" class="btn btn-gradient w-100 py-2"><i class="ri-send-plane-line me-1"></i> Submit Leave Request</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Attendance Correction Form (Admins / Teachers) -->
+  <div class="col-lg-6">
+    <div class="glass-card p-4 border-info">
+      <h4 class="fw-bold mb-3 text-light"><i class="ri-edit-circle-line text-cyan me-2"></i>Manual Attendance Correction</h4>
+
+      <form method="POST" action="{% url 'api_correct_attendance' %}">
+        {% csrf_token %}
+
+        <div class="mb-3">
+          <label class="form-label text-light fw-bold">Select Student *</label>
+          <select name="student_id" class="form-select bg-dark text-light border-secondary" required>
+            <option value="">-- Choose Student --</option>
+            {% for s in students %}
+              <option value="{{ s.id }}">{{ s.name }} ({{ s.roll_number }} • {{ s.department.code }})</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="row g-3 mb-3">
+          <div class="col-6">
+            <label class="form-label text-light fw-bold">Target Date *</label>
+            <input type="date" name="target_date" id="correction-date" class="form-control bg-dark text-light border-secondary" required />
+          </div>
+
+          <div class="col-6">
+            <label class="form-label text-light fw-bold">Corrected Status *</label>
+            <select name="status" class="form-select bg-dark text-light border-secondary" required>
+              <option value="Present">Present</option>
+              <option value="Present (On Leave)">Present (On Leave)</option>
+              <option value="Late">Late</option>
+              <option value="Absent">Absent</option>
+            </select>
+          </div>
+        </div>
+
+        <button type="submit" class="btn btn-outline-info w-100 py-2"><i class="ri-save-3-line me-1"></i> Update & Save Attendance Correction</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Leave Applications Table -->
+<div class="glass-card p-0 overflow-hidden">
+  <div class="p-3 border-bottom border-secondary border-opacity-25 bg-dark">
+    <h5 class="fw-bold mb-0 text-light"><i class="ri-list-check-3 text-warning me-2"></i>Leave Applications & Approval Status</h5>
+  </div>
+
+  <div class="table-responsive">
+    <table class="table table-dark-custom align-middle mb-0">
+      <thead>
+        <tr class="bg-dark text-light">
+          <th class="ps-4">Student</th>
+          <th>Roll Number</th>
+          <th>Duration</th>
+          <th>Reason</th>
+          <th>Status</th>
+          <th class="pe-4 text-end">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% if leaves %}
+          {% for l in leaves %}
+            <tr>
+              <td class="ps-4"><strong class="text-light fs-6">{{ l.student.name }}</strong></td>
+              <td><span class="font-monospace text-info fw-bold">{{ l.student.roll_number }}</span></td>
+              <td><span class="text-light font-monospace">{{ l.start_date }} to {{ l.end_date }}</span></td>
+              <td><span class="text-light text-truncate d-inline-block" style="max-width: 200px;">{{ l.reason }}</span></td>
+              <td>
+                {% if l.status == 'APPROVED' %}
+                  <span class="badge bg-success bg-opacity-25 text-success px-3 py-1 fw-bold">APPROVED</span>
+                {% elif l.status == 'REJECTED' %}
+                  <span class="badge bg-danger bg-opacity-25 text-danger px-3 py-1 fw-bold">REJECTED</span>
+                {% else %}
+                  <span class="badge bg-warning bg-opacity-25 text-warning px-3 py-1 fw-bold">PENDING</span>
+                {% endif %}
+              </td>
+              <td class="pe-4 text-end">
+                {% if l.status == 'PENDING' %}
+                  <a href="{% url 'leave_approve' l.id 'APPROVED' %}" class="btn btn-sm btn-outline-success me-1"><i class="ri-check-line me-1"></i>Approve & Excuse Attendance</a>
+                  <a href="{% url 'leave_approve' l.id 'REJECTED' %}" class="btn btn-sm btn-outline-danger"><i class="ri-close-line me-1"></i>Reject</a>
+                {% else %}
+                  <span class="text-light small"><i class="ri-checkbox-circle-line text-success me-1"></i>Reviewed</span>
+                {% endif %}
+              </td>
+            </tr>
+          {% endfor %}
+        {% else %}
+          <tr>
+            <td colspan="6" class="text-center py-4 text-light">No leave requests recorded. Submit a request using the form above.</td>
+          </tr>
+        {% endif %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const todayStr = new Date().toLocaleDateString('sv');
+    const sDate = document.getElementById('leave-start-date');
+    const eDate = document.getElementById('leave-end-date');
+    const cDate = document.getElementById('correction-date');
+
+    if (sDate) sDate.value = todayStr;
+    if (eDate) eDate.value = todayStr;
+    if (cDate) cDate.value = todayStr;
+  });
+</script>
+{% endblock %}

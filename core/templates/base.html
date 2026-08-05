@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{% block title %}BCA Final Year - Face Recognition Attendance System{% endblock %}</title>
+  
+  <!-- Bootstrap 5 CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- RemixIcons -->
+  <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&family=Mukta+Malar:wght@400;600&display=swap" rel="stylesheet">
+  
+  <style>
+    :root {
+      --bg-dark: #060911;
+      --bg-card: rgba(13, 20, 36, 0.92);
+      --border-color: rgba(255, 255, 255, 0.15);
+      --accent-cyan: #00f2fe;
+      --accent-blue: #38bdf8;
+      --accent-purple: #818cf8;
+      --accent-emerald: #10b981;
+      --accent-amber: #fbbf24;
+      --accent-red: #f87171;
+      --text-main: #ffffff;
+      --text-muted: #cbd5e1;
+    }
+
+    body {
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      font-family: 'Outfit', 'Mukta Malar', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      background-image: 
+        radial-gradient(circle at 10% 20%, rgba(97, 87, 255, 0.14) 0%, transparent 40%),
+        radial-gradient(circle at 90% 80%, rgba(0, 242, 254, 0.12) 0%, transparent 40%);
+      background-attachment: fixed;
+    }
+
+    /* High Contrast Modern Glass Cards */
+    .glass-card {
+      background: var(--bg-card);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.6);
+    }
+
+    /* Modern Header Navbar */
+    .navbar {
+      background: rgba(6, 9, 17, 0.95) !important;
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border-bottom: 1px solid rgba(0, 242, 254, 0.25);
+      box-shadow: 0 4px 25px rgba(0, 0, 0, 0.8);
+      padding: 0.6rem 1rem;
+    }
+
+    .navbar-brand {
+      font-weight: 700;
+      font-size: 1.2rem;
+      background: linear-gradient(135deg, var(--accent-cyan), var(--accent-blue), var(--accent-purple));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      white-space: nowrap;
+      letter-spacing: -0.2px;
+    }
+
+    /* 3-Line Hamburger Button (Visible on Laptops, Desktops, & Phones) */
+    .btn-hamburger-3lines {
+      background: rgba(0, 242, 254, 0.12) !important;
+      border: 1px solid rgba(0, 242, 254, 0.45) !important;
+      color: var(--accent-cyan) !important;
+      font-weight: 700 !important;
+      padding: 0.4rem 0.9rem !important;
+      border-radius: 10px !important;
+      transition: all 0.25s ease !important;
+      display: inline-flex !important;
+      align-items: center !important;
+      gap: 0.4rem !important;
+      box-shadow: 0 0 14px rgba(0, 242, 254, 0.2) !important;
+      cursor: pointer !important;
+    }
+
+    .btn-hamburger-3lines:hover, .btn-hamburger-3lines:focus {
+      background: rgba(0, 242, 254, 0.25) !important;
+      border-color: var(--accent-cyan) !important;
+      color: #ffffff !important;
+      box-shadow: 0 0 20px rgba(0, 242, 254, 0.4) !important;
+      transform: translateY(-1px);
+    }
+
+    /* Live Laptop HUD Clock Pill */
+    .hud-clock-pill {
+      background: rgba(15, 23, 42, 0.95);
+      border: 1px solid rgba(0, 242, 254, 0.35);
+      border-radius: 30px;
+      padding: 0.35rem 0.85rem;
+      font-size: 0.82rem;
+      white-space: nowrap;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      box-shadow: 0 0 12px rgba(0, 242, 254, 0.12);
+    }
+
+    .hud-clock-pill .live-dot {
+      width: 8px;
+      height: 8px;
+      background-color: var(--accent-cyan);
+      border-radius: 50%;
+      box-shadow: 0 0 10px var(--accent-cyan);
+      animation: pulse-dot 1.8s infinite ease-in-out;
+    }
+
+    @keyframes pulse-dot {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(0.85); }
+    }
+
+    /* Offcanvas Vertical Menu Drawer */
+    .offcanvas-dark-custom {
+      background: rgba(8, 12, 24, 0.98) !important;
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-left: 1px solid rgba(0, 242, 254, 0.3) !important;
+      box-shadow: -10px 0 40px rgba(0, 0, 0, 0.9);
+      width: 320px !important;
+    }
+
+    .vertical-menu-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 0.45rem;
+    }
+
+    .vertical-menu-item .v-link {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.75rem 1rem;
+      color: #cbd5e1;
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 0.95rem;
+      border-radius: 10px;
+      background: rgba(15, 23, 42, 0.7);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      transition: all 0.2s ease;
+    }
+
+    .vertical-menu-item .v-link:hover {
+      background: rgba(0, 242, 254, 0.18);
+      border-color: rgba(0, 242, 254, 0.5);
+      color: #ffffff;
+      padding-left: 1.25rem;
+    }
+
+    .vertical-menu-item .v-link.active {
+      background: linear-gradient(135deg, rgba(0, 242, 254, 0.25), rgba(97, 87, 255, 0.25));
+      border: 1px solid var(--accent-cyan);
+      color: var(--accent-cyan);
+      font-weight: 700;
+      box-shadow: 0 0 15px rgba(0, 242, 254, 0.25);
+    }
+
+    .form-label {
+      color: #f1f5f9 !important;
+      font-weight: 600 !important;
+      font-size: 0.85rem !important;
+      letter-spacing: 0.3px;
+      margin-bottom: 0.35rem;
+    }
+
+    .form-control, .form-select {
+      background-color: #0f172a !important;
+      color: #ffffff !important;
+      border: 1px solid #334155 !important;
+      font-weight: 500;
+    }
+
+    .form-control:focus, .form-select:focus {
+      border-color: var(--accent-cyan) !important;
+      box-shadow: 0 0 0 0.25rem rgba(0, 242, 254, 0.25) !important;
+      color: #ffffff !important;
+    }
+
+    .form-control::placeholder {
+      color: #94a3b8 !important;
+    }
+
+    .text-muted {
+      color: #cbd5e1 !important;
+    }
+
+    /* High Contrast Alert Messages */
+    .alert-success {
+      background-color: rgba(16, 185, 129, 0.25) !important;
+      border: 1px solid #10b981 !important;
+      color: #ecfdf5 !important;
+      font-weight: 600 !important;
+    }
+
+    .alert-info {
+      background-color: rgba(14, 165, 233, 0.25) !important;
+      border: 1px solid #38bdf8 !important;
+      color: #f0f9ff !important;
+      font-weight: 600 !important;
+    }
+
+    .alert-warning {
+      background-color: rgba(245, 158, 11, 0.25) !important;
+      border: 1px solid #fbbf24 !important;
+      color: #fffbeb !important;
+      font-weight: 600 !important;
+    }
+
+    .alert-danger {
+      background-color: rgba(239, 68, 68, 0.25) !important;
+      border: 1px solid #f87171 !important;
+      color: #fef2f2 !important;
+      font-weight: 600 !important;
+    }
+
+    .btn-gradient {
+      background: linear-gradient(135deg, var(--accent-cyan) 0%, var(--accent-blue) 50%, var(--accent-purple) 100%);
+      color: #060911;
+      border: none;
+      font-weight: 700;
+      box-shadow: 0 4px 15px rgba(0, 242, 254, 0.3);
+    }
+
+    .btn-gradient:hover {
+      color: #060911;
+      box-shadow: 0 6px 20px rgba(0, 242, 254, 0.5);
+      transform: translateY(-1px);
+    }
+
+    .footer {
+      margin-top: auto;
+      border-top: 1px solid var(--border-color);
+      padding: 1.5rem 0;
+      font-size: 0.85rem;
+      color: #cbd5e1;
+      background: rgba(6, 9, 17, 0.95);
+    }
+
+    .table-dark-custom {
+      --bs-table-bg: transparent;
+      --bs-table-color: #f8fafc;
+      --bs-table-border-color: var(--border-color);
+    }
+
+    .badge-bca {
+      font-size: 0.65rem;
+      background: rgba(0, 242, 254, 0.15);
+      color: var(--accent-cyan);
+      border: 1px solid rgba(0, 242, 254, 0.35);
+      padding: 2px 6px;
+      border-radius: 6px;
+      font-weight: 600;
+    }
+  </style>
+  {% block extra_css %}{% endblock %}
+</head>
+<body>
+
+  <!-- Top Header Bar with 3-Line Hamburger Button -->
+  <nav class="navbar sticky-top">
+    <div class="container-fluid px-3 px-md-4 d-flex align-items-center justify-content-between">
+      
+      <!-- Brand Logo -->
+      <a class="navbar-brand d-flex align-items-center gap-2" href="{% url 'home' %}">
+        <i class="ri-scan-touch-line fs-3" style="color:var(--accent-cyan)"></i>
+        <span>{{ tr.brand_title }} <span class="badge-bca">BCA Enterprise</span></span>
+      </a>
+
+      <!-- Right Controls: Clock + Language + 3-LINE HAMBURGER MENU BUTTON -->
+      <div class="d-flex align-items-center gap-3">
+        <!-- Live Laptop HUD Date & Time Pill -->
+        <div class="hud-clock-pill font-monospace d-none d-sm-inline-flex" title="Live Synced Laptop System Date & Time">
+          <span class="live-dot"></span>
+          <span id="laptop-date-str" class="text-cyan font-monospace">--</span>
+          <span id="laptop-time-str" class="fw-bold text-light font-monospace">--:--:--</span>
+        </div>
+
+        <!-- Language Switcher Dropdown -->
+        <div class="dropdown">
+          <button class="btn btn-outline-secondary btn-sm dropdown-toggle py-1 px-2 font-monospace" type="button" data-bs-toggle="dropdown">
+            <i class="ri-translate-2 me-1"></i> {% if tr.is_ta %}தமிழ் (TA){% else %}English (EN){% endif %}
+          </button>
+          <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-end shadow">
+            <li><a class="dropdown-item small {% if not tr.is_ta %}active fw-bold{% endif %}" href="{% url 'toggle_language' %}?lang=EN"><i class="ri-check-line me-1"></i> English (EN)</a></li>
+            <li><a class="dropdown-item small {% if tr.is_ta %}active fw-bold{% endif %}" href="{% url 'toggle_language' %}?lang=TA"><i class="ri-check-line me-1"></i> தமிழ் (Tamil)</a></li>
+          </ul>
+        </div>
+
+        <!-- 3-LINE HAMBURGER MENU BUTTON (ALWAYS VISIBLE ON LAPTOPS & PHONES) -->
+        <button class="btn btn-hamburger-3lines" type="button" data-bs-toggle="offcanvas" data-bs-target="#hamburgerDrawer" aria-controls="hamburgerDrawer">
+          <i class="ri-menu-line fs-4"></i>
+          <span>{{ tr.nav_menu }}</span>
+        </button>
+      </div>
+
+    </div>
+  </nav>
+
+  <!-- OFFCANVAS VERTICAL MENU DRAWER (STACKED UNDER AND UNDER) -->
+  <div class="offcanvas offcanvas-end offcanvas-dark-custom text-light" tabindex="-1" id="hamburgerDrawer" aria-labelledby="hamburgerDrawerLabel">
+    <div class="offcanvas-header border-bottom border-secondary border-opacity-25 pb-3">
+      <h5 class="offcanvas-title fw-bold text-cyan" id="hamburgerDrawerLabel">
+        <i class="ri-menu-line me-2"></i>{{ tr.nav_menu }}
+      </h5>
+      <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    </div>
+
+    <div class="offcanvas-body p-3">
+      {% if user.is_authenticated %}
+        <div class="glass-card p-3 mb-3 d-flex align-items-center gap-2 border-info border-opacity-25">
+          <i class="ri-user-shield-line fs-4 text-info"></i>
+          <div>
+            <div class="fw-bold text-light small">{{ user.username }}</div>
+            <div class="text-cyan font-monospace" style="font-size:0.75rem;">Admin / Faculty</div>
+          </div>
+        </div>
+      {% endif %}
+
+      <ul class="vertical-menu-list">
+        <li class="vertical-menu-item">
+          <a class="v-link {% if request.resolver_match.url_name == 'home' %}active{% endif %}" href="{% url 'home' %}">
+            <span><i class="ri-home-4-line text-cyan me-2"></i> {{ tr.nav_home }}</span>
+            <i class="ri-arrow-right-s-line text-muted"></i>
+          </a>
+        </li>
+
+        {% if user.is_authenticated %}
+          <li class="vertical-menu-item">
+            <a class="v-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}" href="{% url 'dashboard' %}">
+              <span><i class="ri-dashboard-3-line text-cyan me-2"></i> {{ tr.nav_dashboard }}</span>
+              <i class="ri-arrow-right-s-line text-muted"></i>
+            </a>
+          </li>
+
+          <li class="vertical-menu-item">
+            <a class="v-link {% if request.resolver_match.url_name == 'live_attendance' %}active{% endif %}" href="{% url 'live_attendance' %}">
+              <span><i class="ri-camera-lens-line text-cyan me-2"></i> {{ tr.nav_scanner }}</span>
+              <i class="ri-arrow-right-s-line text-muted"></i>
+            </a>
+          </li>
+
+          <li class="vertical-menu-item">
+            <a class="v-link {% if 'student' in request.resolver_match.url_name %}active{% endif %}" href="{% url 'student_list' %}">
+              <span><i class="ri-user-search-line text-cyan me-2"></i> {{ tr.nav_students }}</span>
+              <i class="ri-arrow-right-s-line text-muted"></i>
+            </a>
+          </li>
+
+          <li class="vertical-menu-item">
+            <a class="v-link {% if request.resolver_match.url_name == 'leave_list' %}active{% endif %}" href="{% url 'leave_list' %}">
+              <span><i class="ri-calendar-event-line text-cyan me-2"></i> {{ tr.nav_leaves }}</span>
+              <i class="ri-arrow-right-s-line text-muted"></i>
+            </a>
+          </li>
+
+          <li class="vertical-menu-item">
+            <a class="v-link {% if request.resolver_match.url_name == 'attendance_history' %}active{% endif %}" href="{% url 'attendance_history' %}">
+              <span><i class="ri-file-list-3-line text-cyan me-2"></i> {{ tr.nav_history }}</span>
+              <i class="ri-arrow-right-s-line text-muted"></i>
+            </a>
+          </li>
+
+          <li class="vertical-menu-item">
+            <a class="v-link {% if request.resolver_match.url_name == 'reports' %}active{% endif %}" href="{% url 'reports' %}">
+              <span><i class="ri-pie-chart-2-line text-cyan me-2"></i> {{ tr.nav_reports }}</span>
+              <i class="ri-arrow-right-s-line text-muted"></i>
+            </a>
+          </li>
+
+          <li class="vertical-menu-item">
+            <a class="v-link {% if request.resolver_match.url_name == 'audit_logs' %}active{% endif %}" href="{% url 'audit_logs' %}">
+              <span><i class="ri-shield-keyhole-line text-cyan me-2"></i> {{ tr.nav_audit }}</span>
+              <i class="ri-arrow-right-s-line text-muted"></i>
+            </a>
+          </li>
+
+          <li class="vertical-menu-item">
+            <a class="v-link {% if request.resolver_match.url_name == 'manual_backup' %}active{% endif %}" href="{% url 'manual_backup' %}">
+              <span><i class="ri-edit-box-line text-cyan me-2"></i> {{ tr.nav_backup }}</span>
+              <i class="ri-arrow-right-s-line text-muted"></i>
+            </a>
+          </li>
+        {% endif %}
+
+        <li class="vertical-menu-item">
+          <a class="v-link {% if request.resolver_match.url_name == 'about' %}active{% endif %}" href="{% url 'about' %}">
+            <span><i class="ri-information-line text-cyan me-2"></i> {{ tr.nav_info }}</span>
+            <i class="ri-arrow-right-s-line text-muted"></i>
+          </a>
+        </li>
+
+        <li class="vertical-menu-item pt-3 border-top border-secondary border-opacity-25 mt-2">
+          {% if user.is_authenticated %}
+            <a href="{% url 'logout' %}" class="btn btn-outline-danger w-100 py-2 font-monospace fw-bold"><i class="ri-logout-box-r-line me-1"></i> {{ tr.nav_logout }}</a>
+          {% else %}
+            <a href="{% url 'login' %}" class="btn btn-gradient w-100 py-2 font-monospace fw-bold"><i class="ri-lock-2-line me-1"></i> {{ tr.nav_login }}</a>
+          {% endif %}
+        </li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Flash Messages -->
+  <div class="container mt-3">
+    {% if messages %}
+      {% for message in messages %}
+        <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} alert-dismissible fade show glass-card border-0 shadow-sm" role="alert">
+          <i class="ri-checkbox-circle-line me-2"></i> {{ message }}
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert"></button>
+        </div>
+      {% endfor %}
+    {% endif %}
+  </div>
+
+  <!-- Main Body Content -->
+  <main class="container my-4">
+    {% block content %}{% endblock %}
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer text-center">
+    <div class="container">
+      <p class="mb-1 text-light"><strong>{{ tr.footer_text }}</strong></p>
+      <small class="text-muted">Built with Python, Django 5, OpenCV, SQLite, Bootstrap 5, and i18n English/Tamil Support | 2026</small>
+    </div>
+  </footer>
+
+  <!-- Bootstrap 5 JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <script>
+    // Laptop Live System Date & Time Sync Engine
+    function updateLaptopClock() {
+      const now = new Date();
+      const dateStr = now.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric', weekday: 'short' });
+      const timeStr = now.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true });
+
+      const dEl = document.getElementById('laptop-date-str');
+      const tEl = document.getElementById('laptop-time-str');
+      if (dEl && tEl) {
+        dEl.textContent = dateStr;
+        tEl.textContent = timeStr;
+      }
+    }
+    updateLaptopClock();
+    setInterval(updateLaptopClock, 1000);
+  </script>
+
+  {% block extra_js %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,7 @@
+*.pyc
+__pycache__/
+*.sqlite3-journal
+.vscode/
+.idea/
+staticfiles/
+media/face_encodings/

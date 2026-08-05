@@ -1,0 +1,144 @@
+{% extends 'base.html' %}
+
+{% block title %}Face Registration - {{ student.name }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-10">
+    <div class="glass-card p-4 p-md-5">
+      <div class="d-flex justify-content-between align-items-center mb-4 border-bottom border-secondary border-opacity-25 pb-3">
+        <div>
+          <h3 class="fw-bold mb-1"><i class="ri-camera-lens-line text-info"></i> Register Face Encodings</h3>
+          <p class="text-secondary small mb-0">Student: <strong>{{ student.name }}</strong> (Roll No: <span class="font-monospace text-info">{{ student.roll_number }}</span> • {{ student.department.code }})</p>
+        </div>
+
+        <a href="{% url 'student_list' %}" class="btn btn-outline-secondary btn-sm"><i class="ri-arrow-left-line"></i> Back to Students</a>
+      </div>
+
+      <div class="row g-4">
+        <!-- Live Webcam Stream Box -->
+        <div class="col-md-7">
+          <div class="glass-card p-3 text-center position-relative overflow-hidden">
+            <h5 class="fw-bold mb-3"><i class="ri-video-line text-success"></i> Webcam Sample Stream</h5>
+            <div class="ratio ratio-16x9 bg-black rounded-3 overflow-hidden border border-secondary border-opacity-50">
+              <video id="webcam" autoplay playsinline muted style="object-fit: cover; transform: scaleX(-1);"></video>
+            </div>
+
+            <div class="mt-3 d-flex justify-content-center gap-2">
+              <button id="btn-capture" class="btn btn-gradient px-4"><i class="ri-camera-3-line"></i> Capture Face Sample</button>
+              <button id="btn-auto-sample" class="btn btn-outline-info"><i class="ri-magic-line"></i> Auto-Sample 5 Shots</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Sample List & Counter Side Panel -->
+        <div class="col-md-5">
+          <div class="glass-card p-3 h-100 d-flex flex-column justify-content-between">
+            <div>
+              <h5 class="fw-bold mb-2"><i class="ri-shield-keyhole-line text-warning"></i> Stored Feature Samples</h5>
+              <p class="text-muted small">Capture at least 3-5 facial samples (front pose, slight tilt left, slight tilt right) for maximum recognition accuracy.</p>
+
+              <div class="p-3 glass-card mb-3 text-center">
+                <small class="text-muted d-block">Registered Encodings Count</small>
+                <h2 id="enc-count" class="fw-bold text-cyan mb-0">{{ encodings_count }}</h2>
+              </div>
+
+              <div id="status-log" class="alert alert-info border-0 glass-card small mb-3">
+                Ready to capture webcam facial encodings.
+              </div>
+            </div>
+
+            <div class="border-top border-secondary border-opacity-25 pt-3">
+              <a href="{% url 'live_attendance' %}" class="btn btn-success w-100 py-2"><i class="ri-check-double-line"></i> Done — Test Live Recognition Scanner</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const video = document.getElementById('webcam');
+    const btnCapture = document.getElementById('btn-capture');
+    const btnAuto = document.getElementById('btn-auto-sample');
+    const countEl = document.getElementById('enc-count');
+    const logEl = document.getElementById('status-log');
+    const studentId = "{{ student.id }}";
+
+    // Start Webcam
+    navigator.mediaDevices.getUserMedia({ video: { width: 1280, height: 720 }, audio: false })
+      .then(stream => {
+        video.srcObject = stream;
+      })
+      .catch(err => {
+        logEl.className = 'alert alert-danger border-0 glass-card small';
+        logEl.textContent = 'Webcam error: Please allow camera access in browser permissions.';
+      });
+
+    function captureAndSave() {
+      if (!video.videoWidth) {
+        logEl.textContent = 'Webcam not active yet.';
+        return Promise.reject();
+      }
+
+      const canvas = document.createElement('canvas');
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      const imgData = canvas.toDataURL('image/jpeg');
+
+      logEl.className = 'alert alert-info border-0 glass-card small';
+      logEl.textContent = 'Processing frame and extracting 128D facial features...';
+
+      return fetch("{% url 'api_save_face_encoding' %}", {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': '{{ csrf_token }}'
+        },
+        body: JSON.stringify({
+          student_id: studentId,
+          image_data: imgData
+        })
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          logEl.className = 'alert alert-success border-0 glass-card small';
+          logEl.textContent = data.message;
+          countEl.textContent = data.count;
+        } else {
+          logEl.className = 'alert alert-warning border-0 glass-card small';
+          logEl.textContent = data.message;
+        }
+      });
+    }
+
+    btnCapture.addEventListener('click', captureAndSave);
+
+    btnAuto.addEventListener('click', () => {
+      let shots = 0;
+      btnAuto.disabled = true;
+      btnCapture.disabled = true;
+
+      const interval = setInterval(() => {
+        shots++;
+        captureAndSave().finally(() => {
+          if (shots >= 5) {
+            clearInterval(interval);
+            btnAuto.disabled = false;
+            btnCapture.disabled = false;
+            logEl.className = 'alert alert-success border-0 glass-card small';
+            logEl.textContent = 'Completed 5 automatic facial sample shots!';
+          }
+        });
+      }, 1200);
+    });
+  });
+</script>
+{% endblock %}

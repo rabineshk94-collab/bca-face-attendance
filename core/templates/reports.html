@@ -1,0 +1,76 @@
+{% extends 'base.html' %}
+
+{% block title %}Attendance Reports & Analytics - Face Recognition Attendance System{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <div>
+    <h2 class="fw-bold mb-1">Attendance Percentage & Analytics Reports</h2>
+    <p class="text-secondary small mb-0">Student percentage statistics, department breakdowns, and shortage condonation alerts</p>
+  </div>
+
+  <div class="d-flex gap-2">
+    <a href="{% url 'export_excel' %}" class="btn btn-outline-success btn-sm"><i class="ri-file-excel-line"></i> Download Full CSV</a>
+    <a href="{% url 'export_pdf' %}" target="_blank" class="btn btn-outline-danger btn-sm"><i class="ri-printer-line"></i> Print PDF Report</a>
+  </div>
+</div>
+
+<!-- Department Overview Cards -->
+<h4 class="fw-bold mb-3"><i class="ri-building-4-line text-warning"></i> Department-Wise Attendance Averages</h4>
+<div class="row g-3 mb-5">
+  {% for d in dept_reports %}
+    <div class="col-md-4">
+      <div class="glass-card p-3">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <h5 class="fw-bold mb-0">{{ d.department.name }}</h5>
+          <span class="badge bg-info bg-opacity-25 text-info font-monospace">{{ d.department.code }}</span>
+        </div>
+        <div class="d-flex justify-content-between align-items-center">
+          <small class="text-muted">Total Students: <strong>{{ d.total_students }}</strong></small>
+          <span class="fs-4 fw-bold {% if d.avg_percentage >= 75 %}text-success{% else %}text-danger{% endif %}">{{ d.avg_percentage }}%</span>
+        </div>
+        <div class="progress mt-2" style="height: 6px; background: rgba(255,255,255,0.08);">
+          <div class="progress-bar {% if d.avg_percentage >= 75 %}bg-success{% else %}bg-danger{% endif %}" style="width: {{ d.avg_percentage }}%"></div>
+        </div>
+      </div>
+    </div>
+  {% endfor %}
+</div>
+
+<!-- Student-Wise Percentage Roster -->
+<h4 class="fw-bold mb-3"><i class="ri-user-star-line text-info"></i> Student Cumulative Attendance Roster</h4>
+<div class="glass-card p-0 overflow-hidden">
+  <div class="table-responsive">
+    <table class="table table-dark-custom align-middle mb-0">
+      <thead>
+        <tr class="bg-dark text-secondary">
+          <th class="ps-4">Roll Number</th>
+          <th>Student Name</th>
+          <th>Department & Year</th>
+          <th>Attendance Rate</th>
+          <th>Examination Eligibility Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in student_reports %}
+          <tr>
+            <td class="ps-4"><span class="font-monospace text-info">{{ r.student.roll_number }}</span></td>
+            <td><strong class="text-light">{{ r.student.name }}</strong></td>
+            <td>{{ r.student.department.code }} <small class="text-muted">({{ r.student.year }})</small></td>
+            <td>
+              <span class="fw-bold {% if r.percentage >= 75 %}text-success{% else %}text-danger{% endif %}">{{ r.percentage }}%</span>
+            </td>
+            <td>
+              {% if r.percentage >= 75 %}
+                <span class="badge bg-success bg-opacity-25 text-success px-3 py-1"><i class="ri-checkbox-circle-line"></i> ELIGIBLE (No Shortage)</span>
+              {% else %}
+                <span class="badge bg-danger bg-opacity-25 text-danger px-3 py-1"><i class="ri-error-warning-line"></i> SHORTAGE WARNING (<75%)</span>
+              {% endif %}
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+
+{% block title %}Contact & Support - Face Recognition Attendance System{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-6">
+    <div class="glass-card p-4 p-md-5">
+      <div class="text-center mb-4">
+        <i class="ri-mail-send-line fs-1 text-cyan"></i>
+        <h3 class="fw-bold mt-2">Project Contact & Support</h3>
+        <p class="text-secondary small">Submit technical inquiries or feedback regarding the BCA project</p>
+      </div>
+
+      <form method="POST" action="{% url 'contact' %}">
+        {% csrf_token %}
+        <div class="mb-3">
+          <label class="form-label text-muted small">Your Name</label>
+          <input type="text" name="name" class="form-control bg-dark text-light border-secondary" required placeholder="John Doe" />
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label text-muted small">Your Email</label>
+          <input type="email" name="email" class="form-control bg-dark text-light border-secondary" required placeholder="john@example.com" />
+        </div>
+
+        <div class="mb-4">
+          <label class="form-label text-muted small">Message / Inquiry</label>
+          <textarea name="message" rows="4" class="form-control bg-dark text-light border-secondary" required placeholder="Enter message..."></textarea>
+        </div>
+
+        <button type="submit" class="btn btn-gradient w-100 py-2"><i class="ri-send-plane-line"></i> Send Message</button>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

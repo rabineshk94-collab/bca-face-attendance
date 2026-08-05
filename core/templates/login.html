@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+
+{% block title %}Admin Login - Face Recognition Attendance System{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center py-5">
+  <div class="col-md-5">
+    <div class="glass-card p-4 p-md-5">
+      <div class="text-center mb-4">
+        <i class="ri-lock-password-line fs-1 text-info"></i>
+        <h3 class="fw-bold mt-2">Admin Portal Login</h3>
+        <p class="text-secondary small">Enter administrator credentials to access system management</p>
+      </div>
+
+      <form method="POST" action="{% url 'login' %}">
+        {% csrf_token %}
+        <div class="mb-3">
+          <label class="form-label text-muted small">Username</label>
+          <div class="input-group">
+            <span class="input-group-text bg-dark border-secondary text-secondary"><i class="ri-user-3-line"></i></span>
+            <input type="text" name="username" class="form-control bg-dark text-light border-secondary" required placeholder="e.g. admin" />
+          </div>
+        </div>
+
+        <div class="mb-4">
+          <label class="form-label text-muted small">Password</label>
+          <div class="input-group">
+            <span class="input-group-text bg-dark border-secondary text-secondary"><i class="ri-key-2-line"></i></span>
+            <input type="password" name="password" class="form-control bg-dark text-light border-secondary" required placeholder="••••••••" />
+          </div>
+        </div>
+
+        <button type="submit" class="btn btn-gradient w-100 py-2 mb-3"><i class="ri-login-box-line"></i> Authenticate & Log In</button>
+
+        <div class="alert alert-info border-0 glass-card text-center mb-0 p-2 small">
+          <i class="ri-information-line"></i> Default Superuser Credentials: <strong>admin</strong> / <strong>admin123</strong>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+
+{% block title %}Project Documentation - BCA Final Year{% endblock %}
+
+{% block content %}
+<div class="glass-card p-4 p-md-5">
+  <div class="border-bottom border-secondary border-opacity-25 pb-4 mb-4">
+    <span class="badge-bca px-3 py-2 fs-6 mb-2 d-inline-block"><i class="ri-file-code-line"></i> Major Project Specification</span>
+    <h2 class="display-6 fw-bold mb-2">BCA Final-Year Major Project Architecture</h2>
+    <p class="text-secondary mb-0">System Design, Database Schemas, AI Face Recognition Workflows, and Technical Stack</p>
+  </div>
+
+  <div class="row g-4 mb-5">
+    <div class="col-md-6">
+      <h4 class="fw-bold mb-3"><i class="ri-stack-line text-info"></i> Technology Stack</h4>
+      <ul class="list-group list-group-flush bg-transparent">
+        <li class="list-group-item bg-transparent text-light border-secondary border-opacity-25"><strong>Web Backend Framework:</strong> Python 3.x with Django 5.x MVC</li>
+        <li class="list-group-item bg-transparent text-light border-secondary border-opacity-25"><strong>Computer Vision Engine:</strong> OpenCV (`opencv-python`), NumPy, HOG Feature Extraction</li>
+        <li class="list-group-item bg-transparent text-light border-secondary border-opacity-25"><strong>Database:</strong> SQLite3 Relational Database (`db.sqlite3`)</li>
+        <li class="list-group-item bg-transparent text-light border-secondary border-opacity-25"><strong>Frontend User Interface:</strong> HTML5, CSS3 Glassmorphism Theme, Bootstrap 5, Chart.js</li>
+        <li class="list-group-item bg-transparent text-light border-secondary border-opacity-25"><strong>Report Engines:</strong> ReportLab PDF Generator & CSV/Excel Data Exporter</li>
+      </ul>
+    </div>
+
+    <div class="col-md-6">
+      <h4 class="fw-bold mb-3"><i class="ri-database-2-line text-warning"></i> Database Relational Schema</h4>
+      <ul class="list-group list-group-flush bg-transparent">
+        <li class="list-group-item bg-transparent text-light border-secondary border-opacity-25"><strong>Users:</strong> Django Admin superuser table for secure login</li>
+        <li class="list-group-item bg-transparent text-light border-secondary border-opacity-25"><strong>Departments:</strong> Academic departments (`BCA`, `B.Sc CS`, `B.Tech CSE`)</li>
+        <li class="list-group-item bg-transparent text-light border-secondary border-opacity-25"><strong>Students:</strong> Student Profile (`student_id`, `roll_number`, `name`, `department`, `year`, `email`, `phone`)</li>
+        <li class="list-group-item bg-transparent text-light border-secondary border-opacity-25"><strong>FaceEncodings:</strong> 128D facial feature vector JSON storage per student</li>
+        <li class="list-group-item bg-transparent text-light border-secondary border-opacity-25"><strong>Attendance:</strong> Time-stamped daily records with status (`Present`/`Absent`), confidence score %, and method</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="glass-card p-4 text-center border-info">
+    <h4 class="fw-bold text-info"><i class="ri-shield-check-line"></i> Anti-Spoofing & AI Verification Features</h4>
+    <p class="text-secondary mb-0">The system includes Laplacian texture variance analysis to detect photo/screen spoof attempts, multi-angle facial sample vectorization, duplicate check-in prevention for the same day, and a QR code backup attendance fallback.</p>
+  </div>
+</div>
+{% endblock %}

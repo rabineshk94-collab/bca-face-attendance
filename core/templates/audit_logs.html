@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+
+{% block title %}System Audit Activity Logs - BCA Project{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <div>
+    <h2 class="fw-bold mb-1"><i class="ri-shield-keyhole-line text-info"></i> Security Audit Activity Logs</h2>
+    <p class="text-secondary small mb-0">System events, login tracking, attendance overrides, and administrative actions</p>
+  </div>
+
+  <a href="{% url 'export_backup_db' %}" class="btn btn-gradient btn-sm"><i class="ri-database-2-line"></i> Download SQLite Backup</a>
+</div>
+
+<div class="glass-card p-0 overflow-hidden">
+  <div class="table-responsive">
+    <table class="table table-dark-custom align-middle mb-0">
+      <thead>
+        <tr class="bg-dark text-secondary">
+          <th class="ps-4">Timestamp</th>
+          <th>User</th>
+          <th>Action Logged</th>
+          <th class="pe-4">IP Address</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% if logs %}
+          {% for log in logs %}
+            <tr>
+              <td class="ps-4 font-monospace text-info"><small>{{ log.timestamp|date:"Y-m-d H:i:s" }}</small></td>
+              <td><strong>{{ log.user.username|default:"System" }}</strong></td>
+              <td><span class="text-light">{{ log.action }}</span></td>
+              <td class="pe-4 font-monospace text-muted"><small>{{ log.ip_address|default:"127.0.0.1" }}</small></td>
+            </tr>
+          {% endfor %}
+        {% else %}
+          <tr>
+            <td colspan="4" class="text-center py-4 text-muted">No activity logs recorded yet.</td>
+          </tr>
+        {% endif %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

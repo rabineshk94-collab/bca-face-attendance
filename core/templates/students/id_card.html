@@ -1,0 +1,90 @@
+{% extends 'base.html' %}
+
+{% block title %}Digital Student ID Card - {{ student.name }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center py-4">
+  <div class="col-md-6 col-lg-5">
+    <!-- ID Card Container -->
+    <div id="id-card-print-area" class="glass-card p-4 border border-info border-opacity-50 position-relative overflow-hidden" style="background: linear-gradient(135deg, rgba(18, 26, 43, 0.95), rgba(11, 15, 25, 0.98));">
+      
+      <!-- Top College Header -->
+      <div class="text-center border-bottom border-secondary border-opacity-25 pb-3 mb-3">
+        <div class="d-flex align-items-center justify-content-center gap-2 mb-1">
+          <i class="ri-graduation-cap-line text-cyan fs-3"></i>
+          <h4 class="fw-bold mb-0 text-cyan">ACADEMIA COLLEGE OF ARTS & SCIENCE</h4>
+        </div>
+        <small class="text-muted text-uppercase tracking-wider font-monospace">Student Digital Identity Card</small>
+      </div>
+
+      <!-- Student Profile Photo & Basic Details -->
+      <div class="text-center mb-3">
+        {% if student.photo %}
+          <img src="{{ student.photo.url }}" class="rounded-3 border border-2 border-info shadow mb-2" style="width: 110px; height: 110px; object-fit: cover;" />
+        {% else %}
+          <div class="rounded-3 border border-2 border-info shadow mb-2 mx-auto d-flex align-items-center justify-content-center bg-dark text-info" style="width: 110px; height: 110px;">
+            <i class="ri-user-smile-line fs-1"></i>
+          </div>
+        {% endif %}
+        <h3 class="fw-bold text-light mb-0">{{ student.name }}</h3>
+        <span class="badge bg-cyan bg-opacity-25 text-cyan font-monospace px-3 py-1 mt-1">{{ student.roll_number }}</span>
+      </div>
+
+      <!-- Meta Info Grid -->
+      <div class="row g-2 text-start bg-dark bg-opacity-50 p-3 rounded-3 mb-3 border border-secondary border-opacity-25 small">
+        <div class="col-6">
+          <span class="text-muted d-block">Department:</span>
+          <strong>{{ student.department.name }}</strong>
+        </div>
+        <div class="col-6">
+          <span class="text-muted d-block">Academic Year:</span>
+          <strong>{{ student.year }}</strong>
+        </div>
+        <div class="col-6 mt-2">
+          <span class="text-muted d-block">Student ID:</span>
+          <span class="font-monospace text-info">{{ student.student_id }}</span>
+        </div>
+        <div class="col-6 mt-2">
+          <span class="text-muted d-block">Contact Email:</span>
+          <span class="text-truncate d-block">{{ student.email|default:"N/A" }}</span>
+        </div>
+      </div>
+
+      <!-- Barcode & QR Code Section -->
+      <div class="d-flex justify-content-between align-items-center pt-2 border-top border-secondary border-opacity-25">
+        <div class="text-center">
+          <svg id="barcode-element"></svg>
+        </div>
+        <div class="text-center">
+          <img src="https://api.qrserver.com/v1/create-qr-code/?size=70x70&data={{ student.roll_number }}" alt="QR Code" class="rounded p-1 bg-white" style="width: 60px; height: 60px;" />
+          <small class="d-block text-muted" style="font-size:0.65rem;">Biometric Scan QR</small>
+        </div>
+      </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="d-flex gap-2 mt-3">
+      <button onclick="window.print()" class="btn btn-gradient w-100"><i class="ri-printer-line"></i> Print / Download ID Card</button>
+      <a href="{% url 'student_list' %}" class="btn btn-outline-secondary w-50"><i class="ri-arrow-left-line"></i> Back</a>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    JsBarcode("#barcode-element", "{{ student.roll_number }}", {
+      format: "CODE128",
+      width: 1.5,
+      height: 35,
+      displayValue: true,
+      fontSize: 10,
+      lineColor: "#00f2fe",
+      background: "transparent",
+      textColor: "#94a3b8"
+    });
+  });
+</script>
+{% endblock %}

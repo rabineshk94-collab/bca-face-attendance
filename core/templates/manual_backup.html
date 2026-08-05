@@ -1,0 +1,112 @@
+{% extends 'base.html' %}
+
+{% block title %}Manual Attendance Backup System - BCA Project{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <div>
+    <h2 class="fw-bold mb-1"><i class="ri-edit-box-line text-info"></i> Manual Attendance Backup System</h2>
+    <p class="text-secondary small mb-0">Manually log attendance by Roll Number, Student ID, or Dropdown Selection</p>
+  </div>
+
+  <a href="{% url 'attendance_history' %}" class="btn btn-outline-info btn-sm"><i class="ri-file-list-line"></i> View Attendance History</a>
+</div>
+
+<div class="row g-4">
+  <!-- Manual Form Panel -->
+  <div class="col-lg-5">
+    <div class="glass-card p-4">
+      <h5 class="fw-bold mb-3"><i class="ri-user-follow-line text-success"></i> Mark Manual Attendance</h5>
+
+      <form method="POST" action="{% url 'api_manual_attendance' %}">
+        {% csrf_token %}
+
+        <div class="mb-3">
+          <label class="form-label text-muted small">Select Target Date</label>
+          <input type="date" name="target_date" id="manual-date-picker" class="form-control bg-dark text-cyan border-secondary" required />
+        </div>
+
+        <!-- Option A: Select Student from Dropdown -->
+        <div class="mb-3">
+          <label class="form-label text-muted small">Option A: Select Registered Student</label>
+          <select name="student_id" class="form-select bg-dark text-light border-secondary">
+            <option value="">-- Choose Student from Roster --</option>
+            {% for s in students %}
+              <option value="{{ s.id }}">{{ s.name }} ({{ s.roll_number }} • {{ s.department.code }})</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="text-center my-3 text-muted small">─── OR MANUALLY TYPE ROLL NUMBER ───</div>
+
+        <!-- Option B: Type Roll Number / Student ID -->
+        <div class="mb-3">
+          <label class="form-label text-muted small">Option B: Enter Roll Number / Student ID</label>
+          <div class="input-group">
+            <span class="input-group-text bg-dark border-secondary text-info"><i class="ri-barcode-box-line"></i></span>
+            <input type="text" name="roll_number" class="form-control bg-dark text-light border-secondary font-monospace" placeholder="e.g. 2026-BCA-001 or BCA2026001" />
+          </div>
+          <div class="form-text text-muted">Supports case-insensitive matching for Roll Number, Student ID, or Name.</div>
+        </div>
+
+        <button type="submit" class="btn btn-gradient w-100 py-2"><i class="ri-check-line"></i> Mark Attendance PRESENT</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Today's Attendance Table -->
+  <div class="col-lg-7">
+    <div class="glass-card p-4">
+      <h5 class="fw-bold mb-3"><i class="ri-history-line text-cyan"></i> Today's Attendance Records (<span id="today-date-badge">{{ today_date }}</span>)</h5>
+
+      <div class="table-responsive">
+        <table class="table table-dark-custom align-middle mb-0">
+          <thead>
+            <tr class="bg-dark text-secondary">
+              <th>Student Name</th>
+              <th>Roll Number</th>
+              <th>Dept</th>
+              <th>Time In</th>
+              <th>Status</th>
+              <th>Method</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% if today_attendances %}
+              {% for a in today_attendances %}
+                <tr>
+                  <td><strong class="text-light">{{ a.student.name }}</strong></td>
+                  <td><span class="font-monospace text-info">{{ a.student.roll_number }}</span></td>
+                  <td>{{ a.department.code }}</td>
+                  <td><span class="font-monospace text-light">{{ a.time_in|time:"H:i:s" }}</span></td>
+                  <td>
+                    <span class="badge {% if a.status == 'Present' %}bg-success{% elif a.status == 'Late' %}bg-warning text-dark{% else %}bg-danger{% endif %} bg-opacity-25 {% if a.status == 'Present' %}text-success{% elif a.status == 'Late' %}text-warning{% else %}text-danger{% endif %}">
+                      {{ a.status }}
+                    </span>
+                  </td>
+                  <td><small class="badge bg-secondary">{{ a.method }}</small></td>
+                </tr>
+              {% endfor %}
+            {% else %}
+              <tr>
+                <td colspan="6" class="text-center py-4 text-muted">No attendance marked for today yet. Use form on the left to mark attendance manually.</td>
+              </tr>
+            {% endif %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const datePicker = document.getElementById('manual-date-picker');
+    if (datePicker) {
+      datePicker.value = new Date().toLocaleDateString('sv');
+    }
+  });
+</script>
+{% endblock %}

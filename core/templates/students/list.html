@@ -1,0 +1,99 @@
+{% extends 'base.html' %}
+
+{% block title %}Student Management - Face Recognition Attendance System{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <div>
+    <h2 class="fw-bold mb-1">Student Management Directory</h2>
+    <p class="text-secondary small mb-0">Register, edit, delete, generate Digital ID Cards, and encode student biometric profiles</p>
+  </div>
+
+  <a href="{% url 'student_add' %}" class="btn btn-gradient btn-sm px-3"><i class="ri-user-add-line"></i> Add New Student</a>
+</div>
+
+<!-- Search & Filter Bar -->
+<div class="glass-card p-3 mb-4">
+  <form method="GET" action="{% url 'student_list' %}" class="row g-3">
+    <div class="col-md-6">
+      <div class="input-group">
+        <span class="input-group-text bg-dark border-secondary text-secondary"><i class="ri-search-line"></i></span>
+        <input type="text" name="q" value="{{ query }}" class="form-control bg-dark text-light border-secondary" placeholder="Search by Name, Roll Number, or Student ID..." />
+      </div>
+    </div>
+
+    <div class="col-md-4">
+      <select name="dept" class="form-select bg-dark text-light border-secondary">
+        <option value="ALL">All Departments</option>
+        {% for d in departments %}
+          <option value="{{ d.id }}" {% if selected_dept == d.id|stringformat:"i" %}selected{% endif %}>{{ d.name }} ({{ d.code }})</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div class="col-md-2">
+      <button type="submit" class="btn btn-outline-info w-100"><i class="ri-filter-3-line"></i> Filter</button>
+    </div>
+  </form>
+</div>
+
+<!-- Student Roster Table -->
+<div class="glass-card p-0 overflow-hidden">
+  <div class="table-responsive">
+    <table class="table table-dark-custom align-middle mb-0">
+      <thead>
+        <tr class="bg-dark text-secondary">
+          <th class="ps-4">Student Name</th>
+          <th>Roll Number</th>
+          <th>Student ID</th>
+          <th>Department & Year</th>
+          <th>Contact Info</th>
+          <th>Face Encodings</th>
+          <th>Attendance Rate</th>
+          <th class="pe-4 text-end">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% if students %}
+          {% for student in students %}
+            <tr>
+              <td class="ps-4">
+                <div class="fw-bold">{{ student.name }}</div>
+              </td>
+              <td><span class="font-monospace text-info">{{ student.roll_number }}</span></td>
+              <td><small class="font-monospace text-muted">{{ student.student_id }}</small></td>
+              <td>{{ student.department.code }} <span class="badge bg-secondary ms-1">{{ student.year }}</span></td>
+              <td>
+                <small class="d-block text-secondary"><i class="ri-mail-line"></i> {{ student.email|default:"N/A" }}</small>
+                <small class="d-block text-muted"><i class="ri-phone-line"></i> {{ student.phone|default:"N/A" }}</small>
+              </td>
+              <td>
+                <span class="badge bg-info bg-opacity-25 text-info">
+                  <i class="ri-camera-lens-line"></i> {{ student.encodings.count }} Encoded
+                </span>
+              </td>
+              <td>
+                {% with pct=student.attendance_percentage %}
+                  <span class="badge {% if pct >= 75 %}bg-success{% else %}bg-danger{% endif %} bg-opacity-25 {% if pct >= 75 %}text-success{% else %}text-danger{% endif %}">
+                    {{ pct }}%
+                  </span>
+                {% endwith %}
+              </td>
+              <td class="pe-4 text-end">
+                <a href="{% url 'student_id_card' student.id %}" class="btn btn-sm btn-outline-light me-1" title="Generate Digital ID Card"><i class="ri-id-card-line"></i> ID Card</a>
+                <a href="{% url 'face_register' student.id %}" class="btn btn-sm btn-outline-info me-1" title="Register Face Encodings"><i class="ri-scan-2-line"></i> Encodings</a>
+                <a href="{% url 'student_edit' student.id %}" class="btn btn-sm btn-outline-warning me-1" title="Edit Student"><i class="ri-edit-line"></i></a>
+                <a href="{% url 'student_delete' student.id %}" class="btn btn-sm btn-outline-danger" onclick="return confirm('Are you sure you want to delete this student profile?')" title="Delete Student"><i class="ri-delete-bin-line"></i></a>
+              </td>
+            </tr>
+          {% endfor %}
+        {% else %}
+          <tr>
+            <td colspan="8" class="text-center py-5 text-muted">No student records found matching search filters.</td>
+          </tr>
+        {% endif %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
